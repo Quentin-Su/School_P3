@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sophie Bluel - Architecte d'intérieur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Work+Sans&display=swap"
+        rel="stylesheet">
+    <meta name="description" content="">
+    <link rel="stylesheet" href="./assets/style.css">
+</head>
+
+<body>
+    <header>
+        <h1>Sophie Bluel <span>Architecte d'inteérieur</span></h1>
+        <nav>
+            <ul>
+                <li>projets</li>
+                <li>contact</li>
+                <li style="font-weight: 600;">login</li>
+                <li><img src="./assets/icons/instagram.png" alt="Instagram"></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="portfolio">
+            <h2>Log In</h2>
+            <div class="gallery" id="gallery"></div>
+        </section>
+        <section id="contact">
+            <form action="/" method="post" id="signup">
+                <span class="login_error" id="error_msg"></span>
+                <label for="email">E-mail</label>
+                <input type="email" name="email" id="email">
+                <label for="password">Mot de passe</label>
+                <input type="password" name="password" id="password">
+                <input type="submit" value="Se connecter">
+            </form>
+            <span class="forgot_password">Mot de passe oublié</span>
+        </section>
+    </main>
+
+    <footer>
+        <nav>
+            <ul>
+                <li>Mentions Légales</li>
+            </ul>
+        </nav>
+    </footer>
+</body>
+
+</html>
+
+<script>
+    const form = document.getElementById('signup');
+    const error = document.getElementById('error_msg');
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const email = form.elements['email'].value;
+        const password = form.elements['password'].value;
+
+        if (email === '' || password === '') {
+            error.innerText = "L'email ou le mot de passe ne sont pas correct";
+        }
+        else {
+            error.innerText = '';
+
+            (async function login() {
+                const user = {
+                    email: email,
+                    password: password
+                };
+
+                const response = await fetch('http://localhost:5678/api/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(user)
+                });
+
+                if (response.status === 200) {
+                    const result = await response.json();
+                    localStorage.setItem("Token", `Bearer ${result.token}`);
+
+                    window.location = "http://127.0.0.1:5500/Project%20n%C2%B03/FrontEnd/index.html"
+                }
+                else {
+                    error.innerText = "L'email ou le mot de passe ne sont pas correct";
+                }
+            })();
+        }
+    });
+</script>
