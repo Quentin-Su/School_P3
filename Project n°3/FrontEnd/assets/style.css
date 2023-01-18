@@ -339,10 +339,6 @@ a {
 	padding: 30px 30px 50px 30px;
 }
 
-#modal_gallery .modal_navigation {
-	justify-content: flex-end;
-}
-
 .modal_wrapper .header {
 	height: auto;
 	text-align: center;
@@ -435,6 +431,10 @@ a {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
+}
+
+#gallery_wrapper .modal_navigation {
+	justify-content: flex-end;
 }
 
 .content {

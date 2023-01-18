@@ -70,7 +70,7 @@
 		<div class="modal_wrapper" id="gallery_wrapper" style="display: none;">
 			<div class="header">
 				<div class="modal_navigation">
-					<div class="close">
+					<div class="close" id="modal_close">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
 							<path
 								d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z" />
@@ -85,7 +85,7 @@
 				<div class="modal_footer">
 					<div class="line"></div>
 					<div class="btn_container">
-						<a class="add_image">Ajouter une photo</a>
+						<a class="add_image" id="modal_next">Ajouter une photo</a>
 						<a class="delete_all">Supprimer la galerie</a>
 					</div>
 				</div>
@@ -94,13 +94,13 @@
 		<div class="modal_wrapper" id="add_image_wrapper" style="display: none;">
 			<div class="header">
 				<div class="modal_navigation">
-					<div class="previous">
+					<div class="previous" id="modal_previous">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
 							<path
 								d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
 						</svg>
 					</div>
-					<div class="close">
+					<div class="close" id="modal_close">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
 							<path
 								d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z" />
@@ -175,8 +175,11 @@
 			<span>modifier</span>`;
 
 		edit.addEventListener('click', event => {
+			modalGallery()
+
 			document.getElementById('modal').style.display = null;
 			document.querySelectorAll('#modal > *')[0].style.display = null;
+			document.querySelectorAll('#modal > *')[1].style.display = 'none';
 		})
 	}
 
@@ -196,7 +199,6 @@
 
 		filter(setFilter); // Add HTML Filter
 		gallery(); // Add HTML Images
-		modalGallery()
 	})()
 
 	async function filter(filter) {
@@ -243,7 +245,7 @@
 
 		setImage.forEach(function (elem) {
 			htmlValue +=
-				`<figure>
+				`<figure id="figure-${elem.id}">
 					<img src="${elem.imageUrl}" alt="${elem.title}" crossorigin="anonymous">
 					<div class="delete_icon" id="delete_image" item-id="${elem.id}"><svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.6 1.8V0.9C6.6 0.402944 6.19704 0 5.7 0H3.3C2.80294 0 2.4 0.402944 2.4 0.9V1.8H0V2.4H0.6V8.1C0.6 8.59704 1.00294 9 1.5 9H7.5C7.99704 9 8.4 8.59704 8.4 8.1V2.4H9V1.8H6.6ZM3 0.9C3 0.734316 3.13432 0.6 3.3 0.6H5.7C5.86568 0.6 6 0.734316 6 0.9V1.8H3V0.9ZM4.2 4.2V7.2H4.8V4.2H4.2ZM2.4 7.2V5.4H3V7.2H2.4ZM6 5.4V7.2H6.6V5.4H6Z"/></svg></div>
 					<figcaption>éditer</figcaption>
@@ -254,28 +256,60 @@
 		const deleteBtn = document.querySelectorAll('#delete_image');
 
 		deleteBtn.forEach(element => {
-			element.addEventListener('click', event => {
+			element.addEventListener('click', async function (event) {
 				event.preventDefault();
 
 				const itemId = event.currentTarget.getAttribute('item-id');
-				deleteRequest(itemId);				
+				document.getElementById(`figure-${itemId}`).remove();
+				deleteRequest(itemId);
 			});
 		});
 	};
 
 	async function deleteRequest(param) {
-		try {
-			const response = await fetch(`${api_Url}works/${param}`, {
-				method: 'DELETE',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `${jwt}`
-				},
-			});
-			const data = await response.json();
-			return data;
-		} catch (error) {
-			console.error('Error:', error);
+		const response = await fetch(`${api_Url}works/${param}`, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `${jwt}`
+			},
+		}).then((response) => {
+			console.log(response);
+		})
+	};
+
+	// Modal
+	const modal = document.getElementById('modal');
+	const pages = document.getElementsByClassName('modal_wrapper');
+	const next = document.getElementById('modal_next');
+	const previous = document.getElementById('modal_previous');
+	const closeModal = document.querySelectorAll('#modal_close');
+
+	next.addEventListener('click', event => {
+		event.preventDefault();
+		pages[0].style.display = 'none'
+		pages[1].style.display = null;
+	})
+
+	previous.addEventListener('click', event => {
+		event.preventDefault();
+		pages[1].style.display = 'none';
+		pages[0].style.display = null;
+	})
+
+	closeModal.forEach(elem => {
+		elem.addEventListener('click', event => {
+			event.preventDefault();
+
+			modal.style.display = 'none';
+			pages[0].style.display = 'none'
+			pages[1].style.display = 'none';
+		})
+	})
+
+	window.onclick = function (event) {
+		if (event.target == modal) {
+			modal.style.display = "none";
 		}
 	}
 
