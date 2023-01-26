@@ -27,9 +27,9 @@
     </header>
     <main>
         <section id="login">
-			<div class="title">
-				<h2>Log In</h2>
-			</div>
+            <div class="title">
+                <h2>Log In</h2>
+            </div>
         </section>
         <section id="login_form">
             <form action="/" method="post" id="signup">
@@ -59,7 +59,7 @@
     const form = document.getElementById('signup');
     const error = document.getElementById('error_msg');
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const email = form.elements['email'].value;
@@ -70,31 +70,23 @@
         }
         else {
             error.innerText = '';
+            const response = await fetch('http://localhost:5678/api/users/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password })
+            });
 
-            (async function login() {
-                const user = {
-                    email: email,
-                    password: password
-                };
+            if (response.status === 200) {
+                const result = await response.json();
+                sessionStorage.setItem("Token", `Bearer ${result.token}`);
 
-                const response = await fetch('http://localhost:5678/api/users/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(user)
-                });
-
-                if (response.status === 200) {
-                    const result = await response.json();
-                    sessionStorage.setItem("Token", `Bearer ${result.token}`);
-
-                    window.location.href  = "index.html";
-                }
-                else {
-                    error.innerText = "Erreur dans l'identifiant ou le mot de passe";
-                }
-            })();
+                window.location.href = "index.html";
+            }
+            else {
+                error.innerText = "Erreur dans l'identifiant ou le mot de passe";
+            }
         }
     });
 </script>
