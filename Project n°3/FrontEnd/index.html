@@ -110,7 +110,7 @@
 				<h2>Ajout photo</h2>
 			</div>
 			<div class="content">
-				<form class="form_container">
+				<form action="/" method="post" class="form_container" id="form_image" enctype="multipart/form-data">
 					<label for="img" class="image_preview">
 						<div class="preview_container">
 							<input type="file" name="img" id="img" class="input_preview_src">
@@ -134,14 +134,15 @@
 					</label>
 
 					<div class="input_form">
-						<label for="text">Titre</label>
-						<input type="text" name="text" id="text">
-						<label for="email">E-mail</label>
+						<label for="title">Titre</label>
+						<input type="text" name="text" id="title">
+						<label for="categories_list">Catégorie</label>
 						<div class="select_categories">
 							<select name="categories_list" id="categories_list">
 								<option selected disabled></option>
 							</select>
 						</div>
+						<span class="form_error"></span>
 					</div>
 
 					<div class="line"></div>
@@ -160,67 +161,79 @@
 		</nav>
 	</footer>
 </body>
-
 </html>
-
 
 <script>
 	const api_Url = 'http://localhost:5678/api/';
 	const jwt = sessionStorage.getItem('Token');
 
-	if (jwt != null) {
-		const edit = document.querySelector('#portfolio .edit');
-		edit.innerHTML =
-			`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M373.1 24.97C401.2-3.147 446.8-3.147 474.9 24.97L487 37.09C515.1 65.21 515.1 110.8 487 138.9L289.8 336.2C281.1 344.8 270.4 351.1 258.6 354.5L158.6 383.1C150.2 385.5 141.2 383.1 135 376.1C128.9 370.8 126.5 361.8 128.9 353.4L157.5 253.4C160.9 241.6 167.2 230.9 175.8 222.2L373.1 24.97zM440.1 58.91C431.6 49.54 416.4 49.54 407 58.91L377.9 88L424 134.1L453.1 104.1C462.5 95.6 462.5 80.4 453.1 71.03L440.1 58.91zM203.7 266.6L186.9 325.1L245.4 308.3C249.4 307.2 252.9 305.1 255.8 302.2L390.1 168L344 121.9L209.8 256.2C206.9 259.1 204.8 262.6 203.7 266.6zM200 64C213.3 64 224 74.75 224 88C224 101.3 213.3 112 200 112H88C65.91 112 48 129.9 48 152V424C48 446.1 65.91 464 88 464H360C382.1 464 400 446.1 400 424V312C400 298.7 410.7 288 424 288C437.3 288 448 298.7 448 312V424C448 472.6 408.6 512 360 512H88C39.4 512 0 472.6 0 424V152C0 103.4 39.4 64 88 64H200z"/></svg>
-			<span>modifier</span>`;
-
-		edit.addEventListener('click', event => {
-			modalGallery()
-
-			document.getElementById('modal').style.display = null;
-			document.querySelectorAll('#modal > *')[0].style.display = null;
-			document.querySelectorAll('#modal > *')[1].style.display = 'none';
-		})
-	}
-
-	async function apiRequest(param, type) {
-		const response = await fetch(`${api_Url}${param}`, {
-			method: `${type}`
+	async function apiRequest(method, url, content) {
+		const response = await fetch(`${api_Url}${url}`, {
+			method,
+			headers: {
+				Accept: 'application/json',
+				Authorization: jwt
+			},
+			body: content
 		});
 
-		if (response.status != 200) return;
-		const result = await response.json();
-		return result;
+		if (response.ok) {
+			if (method === 'DELETE') return response;
+
+			const result = await response.json();
+			return result;
+		}
+		return;
 	}
 
-	// Filter
+	// Main
 	(async function main() {
-		const setFilter = await apiRequest('categories', 'GET');
+		const getCategories = await apiRequest('GET', 'categories');
 
-		filter(setFilter); // Add HTML Filter
-		gallery(); // Add HTML Images
-	})()
+		await setFilter(getCategories);
+		await gallery();
 
-	async function filter(filter) {
+		if (jwt) {
+			const edit = document.querySelector('#portfolio .edit');
+			edit.innerHTML =
+				`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M373.1 24.97C401.2-3.147 446.8-3.147 474.9 24.97L487 37.09C515.1 65.21 515.1 110.8 487 138.9L289.8 336.2C281.1 344.8 270.4 351.1 258.6 354.5L158.6 383.1C150.2 385.5 141.2 383.1 135 376.1C128.9 370.8 126.5 361.8 128.9 353.4L157.5 253.4C160.9 241.6 167.2 230.9 175.8 222.2L373.1 24.97zM440.1 58.91C431.6 49.54 416.4 49.54 407 58.91L377.9 88L424 134.1L453.1 104.1C462.5 95.6 462.5 80.4 453.1 71.03L440.1 58.91zM203.7 266.6L186.9 325.1L245.4 308.3C249.4 307.2 252.9 305.1 255.8 302.2L390.1 168L344 121.9L209.8 256.2C206.9 259.1 204.8 262.6 203.7 266.6zM200 64C213.3 64 224 74.75 224 88C224 101.3 213.3 112 200 112H88C65.91 112 48 129.9 48 152V424C48 446.1 65.91 464 88 464H360C382.1 464 400 446.1 400 424V312C400 298.7 410.7 288 424 288C437.3 288 448 298.7 448 312V424C448 472.6 408.6 512 360 512H88C39.4 512 0 472.6 0 424V152C0 103.4 39.4 64 88 64H200z"/></svg>
+				<span>modifier</span>`;
+
+			edit.addEventListener('click', event => {
+				event.preventDefault();
+				modalGallery();
+
+				document.getElementById('modal').style.display = null;
+				document.querySelectorAll('#modal > *')[0].style.display = null;
+				document.querySelectorAll('#modal > *')[1].style.display = 'none';
+			});
+		}
+	})();
+
+	async function setFilter(filter) {
 		const htmlFilter = document.getElementById('filter');
 		const selectHtmlFilter = document.getElementById('categories_list');
+
 		filter.forEach(elem => {
 			htmlFilter.innerHTML += `<span class="filter_item" id="${elem.id}">${elem.name}</span>`;
-			selectHtmlFilter.innerHTML += `<option value='${elem.name}'>${elem.name}</option>`;
+			selectHtmlFilter.innerHTML += `<option value='${elem.id}'>${elem.name}</option>`;
 		});
 
 		htmlFilter.childNodes.forEach(item => {
 			item.addEventListener('click', value => {
-				const currentItem = document.querySelector('#filter .selected').classList.remove('selected');
+				const current = document.querySelector('#filter .selected')
+				if (current.getAttribute('id') == value.target.id) return;
+
+				current.classList.remove('selected');
 				value.target.classList.add('selected');
 
 				gallery(value.target.id)
-			})
-		})
-	}
+			});
+		});
+	};
 
 	async function gallery(param) {
-		const setImage = await apiRequest('works', 'GET');
+		const setImage = await apiRequest('GET', 'works');
 
 		const gallery = document.getElementById('gallery');
 		let htmlValue = '';
@@ -228,7 +241,7 @@
 		setImage.forEach(function (elem) {
 			if (param == '' || param === undefined || elem.categoryId == param) {
 				htmlValue +=
-					`<figure>
+					`<figure id="figure-${elem.id}">
 						<img src="${elem.imageUrl}" alt="${elem.title}" crossorigin="anonymous">
 						<figcaption>${elem.title}</figcaption>
 					</figure>`;
@@ -238,14 +251,14 @@
 	}
 
 	async function modalGallery() {
-		const setImage = await apiRequest('works', 'GET');
+		const setImage = await apiRequest('GET', 'works');
 
 		const gallery = document.getElementById('modal_gallery');
 		let htmlValue = '';
 
 		setImage.forEach(function (elem) {
 			htmlValue +=
-				`<figure id="figure-${elem.id}">
+				`<figure>
 					<img src="${elem.imageUrl}" alt="${elem.title}" crossorigin="anonymous">
 					<div class="delete_icon" id="delete_image" item-id="${elem.id}"><svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.6 1.8V0.9C6.6 0.402944 6.19704 0 5.7 0H3.3C2.80294 0 2.4 0.402944 2.4 0.9V1.8H0V2.4H0.6V8.1C0.6 8.59704 1.00294 9 1.5 9H7.5C7.99704 9 8.4 8.59704 8.4 8.1V2.4H9V1.8H6.6ZM3 0.9C3 0.734316 3.13432 0.6 3.3 0.6H5.7C5.86568 0.6 6 0.734316 6 0.9V1.8H3V0.9ZM4.2 4.2V7.2H4.8V4.2H4.2ZM2.4 7.2V5.4H3V7.2H2.4ZM6 5.4V7.2H6.6V5.4H6Z"/></svg></div>
 					<figcaption>éditer</figcaption>
@@ -256,29 +269,21 @@
 		const deleteBtn = document.querySelectorAll('#delete_image');
 
 		deleteBtn.forEach(element => {
-			element.addEventListener('click', async function (event) {
+			element.addEventListener('click', async (event) => {
 				event.preventDefault();
 
 				const itemId = event.currentTarget.getAttribute('item-id');
-				document.getElementById(`figure-${itemId}`).remove();
-				deleteRequest(itemId);
+				const response = await apiRequest('DELETE', `works/${itemId}`);
+
+				if  (response.ok) {
+					element.parentElement.remove()
+					document.getElementById(`figure-${itemId}`).remove();
+				}
 			});
 		});
 	};
 
-	async function deleteRequest(param) {
-		const response = await fetch(`${api_Url}works/${param}`, {
-			method: 'DELETE',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `${jwt}`
-			},
-		}).then((response) => {
-			console.log(response);
-		})
-	};
-
-	// Modal
+	//Modal
 	const modal = document.getElementById('modal');
 	const pages = document.getElementsByClassName('modal_wrapper');
 	const next = document.getElementById('modal_next');
@@ -286,32 +291,28 @@
 	const closeModal = document.querySelectorAll('#modal_close');
 
 	next.addEventListener('click', event => {
-		event.preventDefault();
-		pages[0].style.display = 'none'
+		pages[0].style.display = 'none';
 		pages[1].style.display = null;
-	})
+	});
 
 	previous.addEventListener('click', event => {
-		event.preventDefault();
 		pages[1].style.display = 'none';
 		pages[0].style.display = null;
-	})
+	});
 
 	closeModal.forEach(elem => {
 		elem.addEventListener('click', event => {
-			event.preventDefault();
-
 			modal.style.display = 'none';
-			pages[0].style.display = 'none'
+			pages[0].style.display = 'none';
 			pages[1].style.display = 'none';
-		})
-	})
+		});
+	});
 
 	window.onclick = function (event) {
 		if (event.target == modal) {
 			modal.style.display = "none";
-		}
-	}
+		};
+	};
 
 	//Image preview
 	const fileImage = document.querySelector('.input_preview_src');
@@ -329,4 +330,48 @@
 		})
 		reader.readAsDataURL(this.files[0]);
 	};
+
+	const form = document.getElementById('form_image');
+	form.addEventListener('submit', async (e) => {
+		e.preventDefault();
+
+		const title = form.elements['title'].value;
+		const categorie = form.elements['categories_list'].value;
+		const image = document.querySelector("#img");
+		const error = document.querySelector('.form_error');
+
+		if (title && categorie && image) {
+			let formData = new FormData();
+
+			formData.append("title", title);
+			formData.append("category", categorie);
+			formData.append("image", image.files[0])
+
+			const response = await apiRequest('POST', 'works', formData);
+
+			if (response) {
+				pages[1].style.display = 'none';
+				pages[0].style.display = null;
+
+				error.innerText = '';
+
+				//Append Image
+				const gallery = document.getElementById('gallery');
+
+				gallery.innerHTML +=
+					`<figure id="figure-${response.id}">
+						img src="${response.imageUrl}" alt="${response.title}" crossorigin="anonymous">
+						<figcaption>${response.title}</figcaption>
+					</figure>`;
+
+				return modalGallery();
+			}
+			else {
+				error.innerText = 'Le formulaire est icomplet';
+			}
+		}
+		else {
+			error.innerText = 'Le formulaire est icomplet';
+		}
+	});
 </script>
