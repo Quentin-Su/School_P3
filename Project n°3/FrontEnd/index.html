@@ -332,6 +332,19 @@
 	};
 
 	const form = document.getElementById('form_image');
+
+	form.onchange = function() {
+		const input = document.querySelectorAll('#form_image input:not([type="submit"]), #form_image select');
+
+		let allValues = true;
+		input.forEach(val => {
+			if (!val.value) allValues = false;
+		});
+
+		if (allValues) document.querySelector('#form_image input[type="submit"]').style.background = '#1D6154';
+		else document.querySelector('#form_image input[type="submit"]').style.background = '#A7A7A7';
+	};
+
 	form.addEventListener('submit', async (e) => {
 		e.preventDefault();
 
@@ -360,7 +373,7 @@
 
 				gallery.innerHTML +=
 					`<figure id="figure-${response.id}">
-						img src="${response.imageUrl}" alt="${response.title}" crossorigin="anonymous">
+						<img src="${response.imageUrl}" alt="${response.title}" crossorigin="anonymous">
 						<figcaption>${response.title}</figcaption>
 					</figure>`;
 
